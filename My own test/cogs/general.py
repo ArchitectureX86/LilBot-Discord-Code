@@ -13,7 +13,7 @@ import traceback
 import glob
 import typing
 import pathlib
-from modules import line_break
+from usefulpy.main import libreak, error, process_list, cleanup
 import psutil
 import random
 from rule34Py import rule34Py
@@ -22,8 +22,8 @@ client = rule34Py()
 client.api_key = "7462b31bb55e44794825fb17562c3089eb4336532192d8dae564c906db4c3bb347afc863199ba737fdf26c51b82af2dbd85c9247d60a4b42e5a2599038817d3e"
 client.user_id = "6894854"
 
-Git = "https://raw.githubusercontent.com/ArchitectureX86/Discord-Rich-Presence/refs/heads/main"
-GitAss = f"{Git}/Presence%20py/assets"
+Git = "https://github.com/ArchitectureX86/LilBot-Discord-Code/tree/main/My%20own%20test"
+GitAss = f"{Git}/assets"
 PyPi = "https://pypi.org/project"
 SysInfo = f"{platform.system()} {platform.release()} {os.name}"
 SysPr = f"{platform.release()}"
@@ -72,18 +72,26 @@ emo = {
 "pin": "<:pin:1556152954644336710>",
 "discordpy": "<:discordpy:1556219829583749212>",
 "error": "<:error:1556152948009082960>",
-"deny": "<:deny:1556152945819521075>"
+"deny": "<:deny:1556152945819521075>",
+"css3": "<:css3:1557764691521048637>",
+"html5": "<:html5:1557764693798686750>"
 }
 
 mark = f"-# {emo['w7q']} Powered by Discord.py {DpyVer}."
 
-ceo = "average_breadlover"
+ceo = "1081413059949633556"
 
 ineligible = f"You are not eligible to use this command.\n{mark}"
 
-def cleanup(path, type):
-    for file in pathlib.Path(f"{path}").rglob(f"*.{type}"):
-        os.remove(file)
+def html_construct(userid, background, header, paragraph):
+    start = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8" />\n<meta name="viewport" content="width=device-width, initial-scale=1.0" />'
+    title = f'<title>{userid}s card.</title>'
+    mid = '<link rel="stylesheet" href="styles.css" type="text/css" media="all" />\n<script src="script.js"></script>\n<style></style>\n</head>\n<body>\n<div id="container">'
+    background = f'<img id="background" src={background}>'
+    header = f'<h id="header">\n{header}\n</h>'
+    paragraph = f'<div class="fancy_underline"></div>\n<p class="paragraph">\n{paragraph}\n</p>\n</div>'
+    end = '</body>\n</html>'
+    return f"{start}\n{title}\n{mid}\n{background}\n{header}\n{paragraph}\n{end}"
 
 # button view class
 class MyView(discord.ui.View):
@@ -123,15 +131,15 @@ class SuperCog(commands.Cog):
         self.bot = bot
 
 # normal commands
-# commands
+# screenshot
     @app_commands.command(name="screenshot", description="screenshot the dev's system.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def screenshot_grab(self, inter: discord.Interaction):
-        if str(inter.user) == ceo :
+        if str(inter.user.id) == ceo :
             await inter.response.defer()
             if not os.path.exists('screenshots'):
                 os.makedirs('screenshots')
-            cleanup("screenshots", "webp")
+            cleanup("screenshots", "webp", "pathlib")
             screenshot = ImageGrab.grab()
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"screenshots/fullscreen_{timestamp}.webp"
@@ -141,13 +149,14 @@ class SuperCog(commands.Cog):
         else:
             await inter.response.send_message(f"{ineligible}", ephemeral=True)
             
+# webp
     @app_commands.command(name="webp", description="Converts any image to Webp.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def imageconvert(self, inter: discord.Interaction, message: discord.Attachment):
         await inter.response.defer()
         if not os.path.exists('images'):
             os.makedirs('images')
-        cleanup("images", "webp")
+        cleanup("images", "webp", "pathlib")
         response = requests.get(message)
         print(message)
         img = Image.open(BytesIO(response.content))
@@ -164,6 +173,7 @@ class SuperCog(commands.Cog):
                 inline=False)
         await inter.followup.send(file=file, embed=embed)
 
+# test emoji
     @app_commands.command(name="test-emoji", description="Thirty Calories.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def echagaino(self, inter: discord.Interaction):
@@ -174,10 +184,11 @@ class SuperCog(commands.Cog):
         message = f"Bot emoji test:\n{", ".join(mlist)}"
         await inter.followup.send(f"{message}\n{mark}", ephemeral=True)
 
+# owner test
     @app_commands.command(name="owner", description="Owner only.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ownertest(self, inter: discord.Interaction):
-        if str(inter.user) == ceo:
+        if str(inter.user.id) == ceo:
             await inter.response.send_message(f"This was a test.")
         else:
             await inter.response.send_message(f"{ineligible}")
@@ -186,7 +197,11 @@ class SuperCog(commands.Cog):
     @app_commands.command(name="server-stats", description="get current server stats")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def stats(self, inter: discord.Interaction) -> None:
-        await inter.response.defer(ephemeral=True)
+        if inter.user.id == str(ceo):
+            ephemeral = False
+        else:
+            ephemeral = True
+        await inter.response.defer()
         cpu = int(psutil.cpu_percent(interval=None))
         mem = int(psutil.virtual_memory().percent)
         if cpu > 75:
@@ -211,15 +226,15 @@ class SuperCog(commands.Cog):
         embed.add_field(name=f"{emo['XPwifi']} Powered by:",
                         value=f"{emo['fragment']} Api wrapper: [`Discord.py {DpyVer}`{emo['shortcut']}]({PyPi}/discord.py)\n{emo['photo']} Info & stats: [`Psutil {PsuVer}`{emo['shortcut']}]({PyPi}/psutil)",
                         inline=False)
-        embed.set_footer(text=f"{SysInfo}, running {PyVer}.")
-        await inter.followup.send(embed=embed, ephemeral=True)
+        embed.set_footer(text=f"{SysInfo}, running {PyVer} with {process_list()} active processes.")
+        await inter.followup.send(embed=embed, ephemeral=ephemeral)
         
 # fuck it, we html.
     @app_commands.command(name="webcard", description="Generates a HTML card with given text and images.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def webcard(self, inter: discord.Interaction, header: str, paragraph: str, background: discord.Attachment):
+    async def webcard(self, inter: discord.Interaction, header: str, paragraph: str, paragraph2: typing.Optional[str], background: typing.Optional[discord.Attachment]):
         await inter.response.defer()
-        if inter.user == ceo:
+        if inter.user.id == ceo:
             ephemeral = False
         else:
             ephemeral = True
@@ -227,22 +242,37 @@ class SuperCog(commands.Cog):
             color=discord.Color.from_rgb(200, 100, 50)
         )
         embed.set_author(name="Webcard Generator.",
-                        icon_url = "attachment://assets/html5.webp"
+                        icon_url="https://raw.githubusercontent.com/ArchitectureX86/LilBot-Discord-Code/refs/heads/main/My%20own%20test/assets/html5.webp"
                         )
         embed.add_field(name=f"Generated HTML:",
-                        value=f'```<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8" />\n<meta name="viewport" content="width=device-width, initial-scale=1.0" />\n<title>{inter.user}s card.</title>\n<link rel="stylesheet" href="styles.css" type="text/css" media="all" />\n<script src="script.js"></script>\n<style></style>\n</head>\n<body></body>\n</html>\n<div id="container">\n<img id="background" src={background}>\n<h id="header">{header}</h>\n<div class="fancy_underline"></div>\n<p class="paragraph">{paragraph}</p>\n</div>```',
+                        value=f'```html\n{html_construct(inter.user.id, background, header, paragraph)}```',
                         inline=False)
-        embed.add_field(name=f"{emo['XPq']} Background info:", value=f"'generated' does not {emo['deny']} mean generated by AI.\nThe bot owner highly recommends [`Phoenix Code`{emo['shortcut']}](https://phcode.io/) for efficient & assisted website creation.",
+        embed.add_field(name=f"{emo['XPq']} Background info:", value=f"'Generated' does not {emo['deny']} mean generated by AI.\nThe bot owner highly recommends [`Phoenix Code.`{emo['shortcut']}](https://phcode.io/) for assisted & efficient {emo['html5']} website creation.",
                         inline=True)
         await inter.followup.send(embed=embed, ephemeral=ephemeral)
-        
+    
+    '''@app_commands.command(name="naughty", description="Replies with a random naughty picture.")
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def naughty(self, inter: discord.Interaction):
+        if inter.user.id == ceo:
+            flist = []
+            await inter.response.defer()
+            if not os.path.exists('C:/Users/chad/Pictures/hehee'):
+                await inter.followup.send("It don't exist")
+            else:
+                for file in pathlib.Path("C:/Users/chad/Pictures/hehee/other").rglob(f"*.jpg"):
+                    flist.append(file)
+                file = discord.File(f"{flist[random.randint(0, len(flist)-1)]}")
+                await inter.followup.send(file=file)
+        else:
+            await inter.response.send_message(ineligible)'''
 
 # sam34 - rule34.xxx posts in discord chat
     @app_commands.command(name="sam34", description="sam34")
     @app_commands.describe(message="Search Rule34 posts.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def sam34get(self, inter: discord.Interaction, message: str, limit: int, ai: bool, ephemeral: bool) -> None:
-        if str(inter.user) == ceo:
+        if str(inter.user.id) == ceo:
             await inter.response.defer(ephemeral=ephemeral)
             r34tags = message.split(", ")
             p_id=random.randint(2,99)
@@ -268,7 +298,7 @@ class SuperCog(commands.Cog):
     @app_commands.describe(extension="The chosen cog.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def reload_cog(self, inter: discord.Interaction, extension: str):
-        if str(inter.user) == ceo:
+        if str(inter.user.id) == ceo:
             await inter.response.defer(ephemeral=True)
             try:
                 await self.bot.reload_extension(f"cogs.{extension}")
@@ -285,7 +315,7 @@ class SuperCog(commands.Cog):
     @app_commands.describe(extension="The chosen cog.")
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)            
     async def unload_cog(self, inter: discord.Interaction, extension: str):
-        if str(inter.user) == ceo:
+        if str(inter.user.id) == ceo:
             await inter.response.defer(ephemeral=True)
             try:
                 await self.bot.unload_extension(f"cogs.{extension}")
@@ -303,7 +333,7 @@ class SuperCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.is_owner()
     async def load_cog(self, inter: discord.Interaction, extension: str):
-        if str(inter.user) == ceo:
+        if str(inter.user.id) == ceo:
             await inter.response.defer(ephemeral=True)
             try:
                 await self.bot.load_extension(f"cogs.{extension}")
@@ -313,14 +343,14 @@ class SuperCog(commands.Cog):
                 await self.bot.tree.sync()
                 await inter.followup.send(f"Loaded {extension}.", ephemeral=True)
         else:
-            inter.response.send_message(f"{ineligible}", ephemeral=True)
+            await inter.response.send_message(f"{ineligible}", ephemeral=True)
 
 # button test
 
         
     @app_commands.command(name="button-test", description="kill me.")
     async def buttontest(self, inter: discord.Interaction[commands.Bot]) -> None:
-        if str(inter.user) == ceo:
+        if str(inter.user.id) == ceo:
             view = MyView(inter.user)
             await inter.response.send_message(
                 embed=discord.Embed(
@@ -330,7 +360,7 @@ class SuperCog(commands.Cog):
             )
             view.message = await inter.original_response()
         else:
-            inter.response.send_message(f"{ineligible}", ephemeral=True)
+            await inter.response.send_message(f"{ineligible}", ephemeral=True)
 
 # setup
 async def setup(bot):

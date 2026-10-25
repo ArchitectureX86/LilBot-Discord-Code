@@ -3,15 +3,19 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# class
 class TestCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @app_commands.command(name="testagain", description="Thirty Calories.")
-    @app_commands.describe(message="The message to echo.")
-    async def echo(self, interaction: discord.Interaction, message: str):
-        await interaction.response.send_message(message)
+        
+# commands
+    '''@app_commands.command(name="send-receive", description="start the loop")
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    async def test(self, inter: discord.Interaction):
+        while True:
+            await inter.response.defer()
+            x = input()
+            await inter.followup.send(f"{x}\n-# This message came from a command prompt input.",
+                                    ephemeral=False)'''
 
 # setup
 async def setup(bot):

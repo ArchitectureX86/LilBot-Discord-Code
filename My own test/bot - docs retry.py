@@ -5,15 +5,15 @@ import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 import asyncio
-from modules import line_break
+from usefulpy.main import libreak, error, process_list
 import platform
 
-line_break("Starting")
+libreak("Starting")
 
 class MyBot(commands.Bot):
     
     
-    @tasks.loop(seconds = 15)
+    @tasks.loop(seconds = 10)
     async def statuschange():
         statuses = ["Driving in my car! right after a beer!",
                     "Hey catch me later and I'll buy you a beer!",
@@ -28,24 +28,24 @@ class MyBot(commands.Bot):
         await bot.change_presence(status=discord.Status.online, activity=discord.Game(statuses[random.randint(0, len(statuses)-1)]))
     
     async def on_ready(self):
-        line_break("Bot is ready")
+        libreak("Bot is ready")
         print(f'Logged in as {self.user}!')
         await MyBot.statuschange.start()
         
     async def on_message(self, message):    
-        line_break("New message received")
+        libreak("New message received")
         print(f'Message from {message.author}: {message.content}')
         
     async def setup_hook(self):
-        line_break("Ran setup_hook")
+        libreak("Ran setup_hook")
         for file in pathlib.Path("cogs").rglob("*.py"):
             if file.stem.startswith("_"):
                 continue
-            line_break("Loading extensions / cogs")
+            libreak("Loading extensions / cogs")
             await bot.load_extension(".".join(file.with_suffix("").parts))
             print(f"var file: {file}")
             print(f"join file suffix: {".".join(file.with_suffix("").parts)}")
-        line_break("Syncing?")
+        libreak("Syncing?")
         await bot.tree.sync()
         print("Synced!")
 
